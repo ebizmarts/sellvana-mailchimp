@@ -1,0 +1,106 @@
+{% set c = THIS.get('model') %}
+{% set mname = APP.instance('BModuleRegistry').currentModuleName() %}
+{% set baseHtmlName = "config[modules][" ~ mname ~ "]" %}
+{% set baseConfigPath = "modules/"~ mname ~"/" %}
+
+{% set oauth2ClientId = c.get(baseConfigPath ~ "client_id") %}
+{% set oauth2RedirectUri = c.get(baseConfigPath ~ "redirect_uri") %}
+{% set oauth2AuthorizeUri = c.get(baseConfigPath ~ "authorize_uri") %}
+{% set oauth2AccessTokenUri = c.get(baseConfigPath ~ "access_token_uri") %}
+{% set oauth2Url = oauth2AuthorizeUri ~ "?redirect_uri=" ~ oauth2RedirectUri|url_encode ~ "&response_type=code&client_id=" ~ oauth2ClientId %}
+
+{% set mailchimpLists = UTIL.arrayToOptions(APP.instance('Ebizmarts_MailChimp_Admin').getAllLists(), 'name', 'id') %}
+{% set ecommOptions   = UTIL.arrayToOptions(APP.instance('Ebizmarts_MailChimp_Admin').ecommOptions(), 'label', 'value') %}
+{% set accountDetails = APP.instance('Ebizmarts_MailChimp_Admin').accountDetails()|raw %}
+
+<h2>{{ "MailChimp"|_ }}</h2>
+
+<div class="accordion accordion-blue panel-group" id="settings-Ebizmarts_MailChimp">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <a href="#" class="accordion-toggle">{{ 'MailChimp Settings'|_ }}</a>
+        </div>
+            <div class="panel-collapse accordion-body in" id="settings-Ebizmarts_MailChimp-group0">
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label class="col-md-2 control-label" for="{{ baseHtmlName }}[active]">{{ 'Enabled'|_ }}</label>
+                        <div class="col-md-5">
+                            <input type="hidden" name="{{ baseHtmlName }}[active]" value="0" id="{{ baseHtmlName }}[active]active"/>
+                            <input class="switch-cbx" name="{{ baseHtmlName }}[active]" {% if c.get(baseConfigPath ~ "active") == 1 %}checked="checked"{% endif %} value='1' type='checkbox'/>
+                        </div>
+                    </div>
+
+                    {% if c.get(baseConfigPath ~ "api_key") %}
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">{{ 'Account Information'|_ }}</label>
+                        <div class="col-md-5">
+                            <ul>
+                                <li>{{ 'Username'|_ }}: {{ accountDetails.username }}</li>
+                                <li>{{ 'Plan Type'|_ }}: {{ accountDetails.plan_type }}</li>
+                                <li>{{ 'Emails Left'|_ }}: {{ accountDetails.emails_left }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label class="col-md-2 control-label" for="{{ baseHtmlName }}-api_key">{{ 'API Key'|_ }}</label>
+                        <div class="col-md-5">
+                            <input placeholder="{{ 'Please activate enter the provided API Key'|_ }}" autocomplete="off" type="text" name="{{ baseHtmlName }}[api_key]" value="{{ c.get(baseConfigPath ~ "api_key") }}" id="{{ baseHtmlName }}-api_key" class="form-control" />
+                        </div>
+                        <div class="col-md-5">
+                            <button id="activate-mailchimp" type="button" class="btn"><!-- btn-info btn-lg -->
+                                {% if c.get(baseConfigPath ~ "api_key") %}
+                                    {{ 'Request New API Key'|_ }}
+                                {% else %}
+                                    {{ 'Activate'|_ }}
+                                {% endif %}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <span class="col-md-2"></span>
+                        <div class="col-md-5">
+                            <iframe src="" id="Ebizmarts_MailChimp-oauth2-iframe"></iframe>
+                        </div>
+                    </div>
+
+                    {% if c.get(baseConfigPath ~ "api_key") %}
+                    <div class="form-group">
+                        <label class="col-md-2 control-label" for="{{ baseHtmlName }}-list_id">{{ 'Subscription List'|_ }}</label>
+                        <div class="col-md-5">
+                            <select id="{{ baseHtmlName }}-list_id" class="form-control" name="{{ baseHtmlName }}[list_id]">
+                                {{ UTIL.optionsHtml(mailchimpLists, c.get(baseConfigPath ~ "list_id"))|raw }}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-2 control-label" for="{{ baseHtmlName }}-ecomm">{{ 'Ecommerce 360'|_ }}</label>
+                        <div class="col-md-5">
+                            <select id="{{ baseHtmlName }}-ecomm" class="form-control" name="{{ baseHtmlName }}[ecomm]">
+                                {{ UTIL.optionsHtml(ecommOptions, c.get(baseConfigPath ~ "ecomm"))|raw }}
+                            </select>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
+                <a target="_blank" href="http://mailchimp.com/signup/?pid=ebizmart&source=sellvana" class="btn btn-default btn-lg" role="button">{{ 'Create a MailChimp account now'|_ }}</a>
+            </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function() {
+
+        var mcOauthUrl = '{{ oauth2Url|raw }}';
+
+        $("#Ebizmarts_MailChimp-oauth2-iframe").hide();
+
+        $("#activate-mailchimp").click(function() {
+            $("#Ebizmarts_MailChimp-oauth2-iframe").attr("src", mcOauthUrl).show();
+
+            $(this).hide();
+        });
+
+    });
+</script>
