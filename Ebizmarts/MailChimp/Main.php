@@ -14,7 +14,9 @@ class Ebizmarts_MailChimp_Main extends BClass {
 
             $apiKey = BConfig::i()->get('modules/Ebizmarts_MailChimp/api_key');
 
-            $this->mc = new Mailchimp($apiKey);
+            if($apiKey) {
+                $this->mc = new Mailchimp($apiKey);
+            }
         }
     }
 

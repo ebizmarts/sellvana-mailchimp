@@ -5,11 +5,14 @@ class Ebizmarts_MailChimp_Admin extends BClass {
     public $mc;
 
     public function __construct() {
+
         include_once __DIR__ . '/lib/mailchimp.php';
 
         $apiKey = BConfig::i()->get('modules/Ebizmarts_MailChimp/api_key');
 
-        $this->mc = new Mailchimp($apiKey);
+        if($apiKey) {
+            $this->mc = new Mailchimp($apiKey);
+        }
     }
 
     /**
@@ -18,9 +21,10 @@ class Ebizmarts_MailChimp_Admin extends BClass {
      * @return array
      */
     public function getAllLists() {
-        $lists = $this->mc->call('lists/list', array());
 
         $myLists = array();
+
+        $lists = $this->mc->call('lists/list', array());
 
         if(is_array($lists) and isset($lists['data'])) {
             for($i=0;$i<count($lists['data']);$i++) {

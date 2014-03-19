@@ -9,9 +9,12 @@
 {% set oauth2AccessTokenUri = c.get(baseConfigPath ~ "access_token_uri") %}
 {% set oauth2Url = oauth2AuthorizeUri ~ "?redirect_uri=" ~ oauth2RedirectUri|url_encode ~ "&response_type=code&client_id=" ~ oauth2ClientId %}
 
-{% set mailchimpLists = UTIL.arrayToOptions(APP.instance('Ebizmarts_MailChimp_Admin').getAllLists(), 'name', 'id') %}
+{% if c.get(baseConfigPath ~ "api_key") %}
+    {% set mailchimpLists = UTIL.arrayToOptions(APP.instance('Ebizmarts_MailChimp_Admin').getAllLists(), 'name', 'id') %}
+    {% set accountDetails = APP.instance('Ebizmarts_MailChimp_Admin').accountDetails()|raw %}
+{% endif %}
+
 {% set ecommOptions   = UTIL.arrayToOptions(APP.instance('Ebizmarts_MailChimp_Admin').ecommOptions(), 'label', 'value') %}
-{% set accountDetails = APP.instance('Ebizmarts_MailChimp_Admin').accountDetails()|raw %}
 
 <h2>{{ "MailChimp"|_ }}</h2>
 
