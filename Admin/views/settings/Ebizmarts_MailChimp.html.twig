@@ -88,7 +88,9 @@
                     {% endif %}
 
                 </div>
-                <a target="_blank" href="http://mailchimp.com/signup/?pid=ebizmart&source=sellvana" class="btn btn-default btn-lg" role="button">{{ 'Create a MailChimp account now'|_ }}</a>
+                {% if not c.get(baseConfigPath ~ "api_key") %}
+                    <a target="_blank" href="http://mailchimp.com/signup/?pid=ebizmart&source=sellvana" class="btn btn-default btn-lg" role="button">{{ 'Create a MailChimp account now'|_ }}</a>
+                {% endif %}
             </div>
     </div>
 </div>
