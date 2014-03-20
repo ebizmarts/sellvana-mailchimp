@@ -41,22 +41,25 @@ class Ebizmarts_MailChimp_Main extends BClass {
 
                 $defaultListId = BConfig::i()->get($this->configPath . 'list_id');
 
-                $subscriptionResult = $this->mc->call('lists/subscribe', array(
+                $postData = array(
                     'id' => $defaultListId,
                     'email' => array(
                         'email' => $pref->get('email'),
-                    ),
-                ));
+                    )
+                );
+
+                //Frontend, get customer data if logged in.
+                $cust = FCom_Customer_Model_Customer::i()->sessionUser();
+                if(false !== $cust) {
+                    $postData['merge_vars'] = array(
+                        'FNAME' => $cust->get('firstname'),
+                        'LNAME' => $cust->get('lastname'),
+                    );
+                }
+
+                $subscriptionResult = $this->mc->call('lists/subscribe', $postData);
 
                 //@TODO: Double opt-in handle in Sellvana?
-
-                //If $subscriptionResult is OKAY
-                /*Array
-                (
-                    [email] => pablete1@ebizmarts.com
-                    [euid] => 834773b0f7
-                    [leid] => 324422413
-                )*/
 
             }
 
