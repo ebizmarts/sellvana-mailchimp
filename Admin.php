@@ -44,10 +44,13 @@ class Ebizmarts_MailChimp_Admin extends BClass {
         //@TODO: Check for errors on $details: "This method is available for API Keys belonging to users with the following roles: admin, owner"
 
         $myDetails = array(
-            'username'    => $details['username'],
-            'plan_type'   => $details['plan_type'],
-            'emails_left' => $details['emails_left'],
+            'username'  => $details['username'],
+            'plan_type' => $details['plan_type'],
         );
+
+        if(isset($details['emails_left'])) {
+            $myDetails['emails_left'] = $details['emails_left'];
+        }
 
         return $myDetails;
     }
