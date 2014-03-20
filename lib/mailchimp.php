@@ -245,8 +245,12 @@ class Mailchimp {
         if (isset($opts['ssl_verifyhost'])){
             $this->ssl_verifyhost = $opts['ssl_verifyhost'];
         }
+
         if (isset($opts['ssl_cainfo'])){
             $this->ssl_cainfo = $opts['ssl_cainfo'];
+        }
+        else {
+            $this->ssl_cainfo = BUCKYBALL_ROOT_DIR . '/ssl/ca-bundle.crt';
         }
 
 
