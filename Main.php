@@ -34,19 +34,23 @@ class Ebizmarts_MailChimp_Main extends BClass {
 
         $pref = $args['model'];
 
-        //Subscribe email if record is new
+        $sub   = (int)$pref->get('sub_newsletter');
+        $unsub = (int)$pref->get('unsub_all');
+
+        $defaultListId = BConfig::i()->get($this->configPath . 'list_id');
+
+        $postData = array(
+            'id' => $defaultListId,
+            'email' => array(
+                'email' => $pref->get('email'),
+            )
+        );
+
+        //Subscribe email if record is new and subscribe
         if($pref->isNewRecord()) {
 
-            if(1 === ((int)$pref->get('sub_newsletter'))) {
-
-                $defaultListId = BConfig::i()->get($this->configPath . 'list_id');
-
-                $postData = array(
-                    'id' => $defaultListId,
-                    'email' => array(
-                        'email' => $pref->get('email'),
-                    )
-                );
+            //Check if subscribe flag is ON
+            if(1 === $sub) {
 
                 //Frontend, get customer data if logged in.
                 $cust = FCom_Customer_Model_Customer::i()->sessionUser();
@@ -57,7 +61,11 @@ class Ebizmarts_MailChimp_Main extends BClass {
                     );
                 }
 
-                $subscriptionResult = $this->mc->call('lists/subscribe', $postData);
+                try {
+                    $this->mc->call('lists/subscribe', $postData);
+                }catch(Exception $ex) {
+                    BDebug::logException($ex);
+                }
 
                 //@TODO: Double opt-in handle in Sellvana?
 
@@ -65,7 +73,42 @@ class Ebizmarts_MailChimp_Main extends BClass {
 
         }
         else {
-            //@TODO: Handle other scenarios.
+
+            $_postData = $postData;
+
+            $_postData['emails'] = array(
+                array('email' => $postData['email']['email']),
+            );
+            unset($_postData['email']);
+
+            $memberInfo = $this->mc->call('lists/member-info', $_postData);
+
+            $isSubscribed = false;
+            if(is_array($memberInfo) and !empty($memberInfo)) {
+                if((int)$memberInfo['success_count'] === 1) {
+                    $isSubscribed = true;
+                }
+            }
+
+            if(1 === $unsub) {
+
+                //Unsubscribe email
+                if($isSubscribed) {
+                    $this->mc->call('lists/unsubscribe', $postData);
+                }
+
+            }
+            else {
+
+                if(1 === $sub) {
+                    //Subscribe email if not subscribed
+                    if(!$isSubscribed) {
+                        $this->mc->call('lists/subscribe', $postData);
+                    }
+                }
+
+            }
+
         }
 
         return $this;
